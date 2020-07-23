@@ -1,3 +1,30 @@
 #!/usr/bin/env bash
 
-jq
+cwd="$(cd "$(dirname "$0")" && pwd)"
+
+
+set -e
+
+LAST_VERSION=$1
+
+# shellcheck source=config
+. "$cwd"/config
+
+PREFIX="$S3_BUCKET_PATH/$CHART_NAME-"
+
+ALL_VERSIONS=$(
+  aws s3api list-objects-v2 --bucket "$S3_BUCKET_NAME" --prefix "$PREFIX" \
+    | jq -r '.Contents[].Key' \
+    | sed "s|^$PREFIX||" \
+    | sed 's|.tgz$||' \
+    | sort -n
+)
+
+if [ -z "$LAST_VERSION" ]
+then
+  VERSIONS=$(echo $ALL_VERSIONS | tail -n1)
+else
+  VERSIONS=$(echo $ALL_VERSIONS | sed -n "/$LAST_VERSION/,\$p")
+fi
+
+echo "$VERSIONS" | jq --raw-input . | jq --slurp | jq "map({\"ref\":.})"

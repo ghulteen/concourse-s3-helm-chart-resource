@@ -1,3 +1,19 @@
 #!/usr/bin/env bash
 
-jq
+cwd="$(cd "$(dirname "$0")" && pwd)"
+
+set -e
+
+OUTPUT_DIR=$1
+
+# shellcheck source=config
+. "$cwd"/config
+
+CHART_VERSION=$(echo "$config" | jq -r ".version.ref")
+
+REMOTE_ADDRESS=s3://${S3_BUCKET_NAME}/${S3_BUCKET_PATH}/${CHART_NAME}-${CHART_VERSION}.tgz
+
+aws s3 cp $REMOTE_ADDRESS $OUTPUT_DIR/chart.tgz 1>&2
+echo $CHART_VERSION > $OUTPUT_DIR/version
+
+echo "{\"version\": {\"ref\": \"$CHART_VERSION\"}}"

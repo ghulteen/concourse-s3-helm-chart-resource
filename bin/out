@@ -1,3 +1,52 @@
 #!/usr/bin/env bash
 
-jq
+set -e
+
+cwd="$(cd "$(dirname "$0")" && pwd)"
+
+cd "$1"
+
+# shellcheck source=config
+. "$cwd"/config
+
+# shellcheck disable=SC2154
+CHART_DIR=$(echo "$config" | jq -r ".params.chart")
+CHART_VERSION=$(echo "$config" | jq -r ".params.version_file" | xargs cat)
+CHART_APP_VERSION=$(echo "$config" | jq -r ".params.app_version_file" | xargs cat)
+
+CHART_NAME=$(helm show chart ${CHART_DIR} | grep "^name: " | cut -d' ' -f2)
+log "🕵️ Chart name: $GREEN$CHART_NAME"
+
+REPO_ADDRESS=s3://${S3_BUCKET_NAME}/${S3_BUCKET_PATH}
+
+if ! aws s3api head-bucket --bucket "$S3_BUCKET_NAME"
+then
+  log $RED"Bucket $S3_BUCKET_NAME doesn't exist or the user doesn't have sufficient permissions."
+  exit 1
+else
+  log "✅ Bucket $GREEN$S3_BUCKET_NAME$NC is accessible "
+fi
+log "🕵️ Bucket region: $GREEN$AWS_DEFAULT_REGION"
+
+if ! aws s3 ls ${REPO_ADDRESS}/index.yaml >/dev/null 
+then
+  log "Initializing the repository in S3"
+  helm s3 init ${REPO_ADDRESS} 1>&2
+  log "✅ Repository $GREEN$REPO_ADDRESS$NC initialized in S3"
+else
+  log "✅ Repository index found in S3"
+fi
+
+log "Configuring local chart repo"
+helm repo add s3 ${REPO_ADDRESS} 1>&2
+
+log "Packaging the chart"
+CHART_ARCHIVE="./$CHART_NAME-$CHART_VERSION.tgz"
+helm package $CHART_DIR --version=$CHART_VERSION --app-version=$CHART_APP_VERSION 1>&2
+
+log "Pushing the chart to S3..."
+helm s3 push $CHART_ARCHIVE s3 1>&2
+
+log "🎉 Chart $CHART_VERSION pushed."
+
+echo "{\"version\": {\"ref\": \"$CHART_VERSION\"}}"
