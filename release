@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -e
+
+if [ -n "$(git status --porcelain)" ]
+then
+  echo "Commit changes before releasing" 1>&2
+  exit 1
+fi
+
+version=$1
+
+if [ -z "$version" ]
+then
+  echo "Usage: $0 VERSION" 1>&2
+  exit 1
+fi
+
+docker build -t "arrivalmobility/concourse-s3-helm-chart-resource:$version" .
+
+docker push arrivalmobility/concourse-s3-helm-chart-resource:"$version"
+
+git tag $version
+
+git push --tags
