@@ -40,7 +40,7 @@ resource_types:
   - name: s3-helm-chart
     type: docker-image
     source:
-      repository: 380321804737.dkr.ecr.eu-west-1.amazonaws.com/concourse-s3-helm-chart-resource
+      repository: arrivalmobility/concourse-s3-helm-chart-resource
 ```
 
 ### Resource
