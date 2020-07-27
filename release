@@ -22,4 +22,5 @@ docker push arrivalmobility/concourse-s3-helm-chart-resource:"$version"
 
 git tag $version
 
+git push
 git push --tags
