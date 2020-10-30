@@ -10,14 +10,11 @@ LAST_VERSION=$1
 # shellcheck source=config
 . "$cwd"/config
 
-PREFIX="$S3_BUCKET_PATH/$CHART_NAME-"
-
 ALL_VERSIONS=$(
-  aws s3api list-objects-v2 --bucket "$S3_BUCKET_NAME" --prefix "$PREFIX" \
-    | jq -r '.Contents[].Key' \
-    | sed "s|^$PREFIX||" \
-    | sed 's|.tgz$||' \
-    | sort -n
+  helm search repo "s3/$CHART_NAME" --versions --output json | \
+    jq ".[] | select(.name == \"s3/$CHART_NAME\")" | \
+    jq -r '.version' \
+    sort -n
 )
 
 if [ -z "$LAST_VERSION" ]

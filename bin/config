@@ -18,3 +18,7 @@ log() {
   args=("$@")
   echo -e "${args[@]}${NC}" 1>&2 
 }
+
+log "Configuring local chart repo"
+REPO_ADDRESS=s3://${S3_BUCKET_NAME}/${S3_BUCKET_PATH}
+helm repo add s3 ${REPO_ADDRESS} 1>&2

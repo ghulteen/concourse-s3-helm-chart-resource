@@ -42,8 +42,6 @@ else
   log "🕵️ Chart name: $GREEN$CHART_NAME"
 fi
 
-REPO_ADDRESS=s3://${S3_BUCKET_NAME}/${S3_BUCKET_PATH}
-
 if ! aws s3api head-bucket --bucket "$S3_BUCKET_NAME"
 then
   log $RED"Bucket $S3_BUCKET_NAME doesn't exist or the user doesn't have sufficient permissions."
@@ -61,9 +59,6 @@ then
 else
   log "✅ Repository index found in S3"
 fi
-
-log "Configuring local chart repo"
-helm repo add s3 ${REPO_ADDRESS} 1>&2
 
 log "Packaging the chart"
 CHART_ARCHIVE="./$CHART_NAME-$CHART_VERSION.tgz"
