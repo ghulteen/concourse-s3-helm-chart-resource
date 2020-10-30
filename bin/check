@@ -13,15 +13,15 @@ LAST_VERSION=$1
 ALL_VERSIONS=$(
   helm search repo "s3/$CHART_NAME" --versions --output json | \
     jq ".[] | select(.name == \"s3/$CHART_NAME\")" | \
-    jq -r '.version' \
-    sort -n
+    jq -r '.version' | \
+    sort -V
 )
 
 if [ -z "$LAST_VERSION" ]
 then
-  VERSIONS=$(echo $ALL_VERSIONS | tail -n1)
+  VERSIONS=$(echo "$ALL_VERSIONS" | tail -n1)
 else
-  VERSIONS=$(echo $ALL_VERSIONS | sed -n "/$LAST_VERSION/,\$p")
+  VERSIONS=$(echo "$ALL_VERSIONS" | sed -n "/$LAST_VERSION/,\$p")
 fi
 
 echo "$VERSIONS" | jq --raw-input . | jq --slurp | jq "map({\"ref\":.})"
