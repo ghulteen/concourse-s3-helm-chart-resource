@@ -13,8 +13,6 @@ Concourse resource for S3-based helm chart repositories. Piggy-backs on the [hel
 ## Behaviour
 
 ### `check`: Extract versions from repository
-Due to a [bug in the helm-s3 plugin](https://github.com/hypnoglow/helm-s3/issues/119),
-the AWS CLI is used directly to list the bucket and extract versions.
 
 ### `in`: Download a chart from repository
 Creates the following files:
